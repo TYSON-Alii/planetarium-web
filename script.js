@@ -15,6 +15,35 @@ function limit(x){
   else if (x > 1) return x - 1;
   return x;
 }
+function isValidIndex(i, j, n) {
+    return i >= 0 && i < n && j >= 0 && j < n;
+}
+function image(sz, fi){
+  return new Array(sz).fill(0).map(() => new Array(sz).fill(fi));
+}  
+function rotate(matrix, r, c) {
+    const radians = r * Math.PI / 180;
+    const cosAngle = Math.cos(radians);
+    const sinAngle = Math.sin(radians);
+    const n = matrix.length;
+    const rotatedMatrix = image(n, c);
+
+    const centerX = (n - 1) / 2;
+    const centerY = (n - 1) / 2;
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            const x = i - centerX;
+            const y = j - centerY;
+            const newX = Math.ceil(x * cosAngle - y * sinAngle + centerX);
+            const newY = Math.ceil(x * sinAngle + y * cosAngle + centerY);
+            if (newX >= 0 && newX < n && newY >= 0 && newY < n) {
+                rotatedMatrix[newX][newY] = matrix[i][j];
+            }
+        }
+    }
+    return rotatedMatrix;
+}
 document.getElementById("userForm").addEventListener("submit", function(event){
   event.preventDefault();
   var userData = document.getElementById("userData").value;
@@ -38,36 +67,53 @@ var t = 0;
 const c1 = uf()*360
 const c2 = limit(c1/360 + unif(0.1, 0.5))*360
 console.log(c1, c2)
+var stars = image(scene, false);
 for (var x = 0; x < scene; x++) {
   for (var y = 0; y < scene; y++){
-    const c = uf()*360;
-    var s = 0;
-    var v = 0;
-    if (uf() < 0.01){
-      s = unif(0.05,0.1);
-      v = 1;
-    }
-    const color = hsv(c, s, v);
-    ctx.fillStyle = color;
-    ctx.fillRect(x*rsize, y*rsize, rsize, rsize);
+    stars[x][y] = uf() < 0.01;
   } 
-} 
-for (var x = 0; x < scene; x++) {
-  t = x/7
-  for (var y = 0; y < scene; y++) {
-    if (pow(x-scene/2,2)+pow(y-scene/2,2) < size*size/4+1) {
-      const prob = (sin(t)+1)/2;
-      var s = unif(0.8,1);
-      var v = unif(0.8,1);
-      var c = c1;
-      if (uf() < prob){
-        c = c2;
-      }  
-      var color = hsv(c,s,v);
+}   
+var pla = image(size, null);
+const rl = rint(2,7);
+for (var x = 0; x < size; x++) {
+    t = x/rl
+    for (var y = 0; y < size; y++) {
+      if (pow(x-size/2,2)+pow(y-size/2,2) < size*size/4-1) {
+        const s = unif(0.8,1);
+        const v = unif(0.8,1);
+        const prob = (sin(t)+1)/2;
+        var c = c1;
+        if (uf() < prob){
+          c = c2;
+        } 
+        pla[x][y] = hsv(c, s, v);
+      }
+      t += 0.5;
+    }
+}
+const rzero = rgb(0,0,0);
+var rot = 0;
+function create(){
+  var temp = stars[0];
+  stars.splice(0, 1);
+  stars.push(temp);
+  const rpla = rotate(pla, rot, c1)
+  rot += 2;
+  for (var x = 0; x < scene; x++){
+    for (var y = 0; y < scene; y++){
+      var color = rzero;
+      const rmin = scene/2-size/2;
+      const rmax = scene/2+size/2;
+      if (x > rmin && x < rmax && y > rmin && y < rmax && rpla[x-rmin][y-rmin] != null){
+        color = rpla[x-rmin][y-rmin];
+      }
+      else if (stars[x][y] == true){
+        color = rgb(255, 255, 255);
+      }
       ctx.fillStyle = color;
       ctx.fillRect(x*rsize, y*rsize, rsize, rsize);
     }
-    t += 0.5;
   }
 }
+setInterval(create, 100);
 }); 
