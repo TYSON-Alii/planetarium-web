@@ -15,9 +15,6 @@ function limit(x){
   else if (x > 1) return x - 1;
   return x;
 }
-function isValidIndex(i, j, n) {
-    return i >= 0 && i < n && j >= 0 && j < n;
-}
 function image(sz, fi){
   return new Array(sz).fill(0).map(() => new Array(sz).fill(fi));
 }  
@@ -35,8 +32,8 @@ function rotate(matrix, r, c) {
         for (let j = 0; j < n; j++) {
             const x = i - centerX;
             const y = j - centerY;
-            const newX = Math.ceil(x * cosAngle - y * sinAngle + centerX);
-            const newY = Math.ceil(x * sinAngle + y * cosAngle + centerY);
+            const newX = Math.round(x * cosAngle - y * sinAngle + centerX);
+            const newY = Math.round(x * sinAngle + y * cosAngle + centerY);
             if (newX >= 0 && newX < n && newY >= 0 && newY < n) {
                 rotatedMatrix[newX][newY] = matrix[i][j];
             }
@@ -44,11 +41,12 @@ function rotate(matrix, r, c) {
     }
     return rotatedMatrix;
 }
+var inter = null;
 document.getElementById("userForm").addEventListener("submit", function(event){
   event.preventDefault();
-  var userData = document.getElementById("userData").value;
+  let userData = document.getElementById("userData").value;
   console.log(userData);
-  var rand = Math.seedrandom(userData);
+  let rand = Math.seedrandom(userData);
 const uf = Math.random
 function rint(min, max) {
   return floor(uf() * (max - min + 1)) + min;
@@ -63,48 +61,47 @@ const pow = Math.pow
 const rsize = 5
 const scene = 96
 const size = 32
-var t = 0;
+let t = 0;
 const c1 = uf()*360
 const c2 = limit(c1/360 + unif(0.1, 0.5))*360
 console.log(c1, c2)
-var stars = image(scene, false);
-for (var x = 0; x < scene; x++) {
-  for (var y = 0; y < scene; y++){
+let stars = image(scene, false);
+for (let x = 0; x < scene; x++) {
+  for (let y = 0; y < scene; y++){
     stars[x][y] = uf() < 0.01;
   } 
 }   
-var pla = image(size, null);
+let pla = image(size, null);
 const rl = rint(2,7);
-for (var x = 0; x < size; x++) {
+for (let x = 0; x < size; x++) {
     t = x/rl
-    for (var y = 0; y < size; y++) {
-      if (pow(x-size/2,2)+pow(y-size/2,2) < size*size/4-1) {
-        const s = unif(0.8,1);
-        const v = unif(0.8,1);
-        const prob = (sin(t)+1)/2;
-        var c = c1;
-        if (uf() < prob){
-          c = c2;
-        } 
-        pla[x][y] = hsv(c, s, v);
-      }
+    for (let y = 0; y < size; y++) {
+      const s = unif(0.8,1);
+      const v = unif(0.8,1);
+      const prob = (sin(t)+1)/2;
+      let c = c1;
+      if (uf() < prob){
+        c = c2;
+      } 
+      pla[x][y] = hsv(c, s, v);
       t += 0.5;
     }
 }
 const rzero = rgb(0,0,0);
-var rot = 0;
+let rot = 0;
 function create(){
-  var temp = stars[0];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let temp = stars[0];
   stars.splice(0, 1);
   stars.push(temp);
-  const rpla = rotate(pla, rot, c1)
+  const rpla = rotate(pla, rot, hsv(c2, 0.9,0.9));
   rot += 2;
-  for (var x = 0; x < scene; x++){
-    for (var y = 0; y < scene; y++){
+  for (let x = 0; x < scene; x++){
+    for (let y = 0; y < scene; y++){
       var color = rzero;
       const rmin = scene/2-size/2;
       const rmax = scene/2+size/2;
-      if (x > rmin && x < rmax && y > rmin && y < rmax && rpla[x-rmin][y-rmin] != null){
+      if (pow(x-scene/2,2)+pow(y-scene/2,2) < size*size/4 && rpla[x-rmin][y-rmin] != null){
         color = rpla[x-rmin][y-rmin];
       }
       else if (stars[x][y] == true){
@@ -115,5 +112,7 @@ function create(){
     }
   }
 }
-setInterval(create, 100);
+if (inter != null)
+  clearInterval(inter);
+inter = setInterval(create, 100);
 }); 
